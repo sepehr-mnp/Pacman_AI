@@ -20,6 +20,8 @@ Pacman agents (in searchAgents.py).
 import util
 from util import Queue
 from util import Stack
+from util import PriorityQueue
+    
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -84,11 +86,11 @@ def depthFirstSearch(problem):
     print("Is the start a goal?", problem.isGoalState(problem.getStartState()))
     print("Start's successors:", problem.getSuccessors(problem.getStartState()))
     """
-    fringe = Stack()               
+    fringe = Stack()                
     fringe.push(problem.getStartState())
-    visited = []                   
-    path=[]                        
-    pathToCurrent=Stack()          
+    visited = []                    
+    path=[]                         
+    pathToCurrent=Stack()           
     currState = fringe.pop()
     while not problem.isGoalState(currState):
         if currState not in visited:
@@ -104,12 +106,12 @@ def depthFirstSearch(problem):
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    fringe = Queue()                       
+    fringe = Queue()                        
     fringe.push(problem.getStartState())
-    visited = []                           
-    tempPath=[]                            
-    path=[]                                 
-    pathToCurrent=Queue()                  
+    visited = []                            
+    tempPath=[]                             
+    path=[]                                  
+    pathToCurrent=Queue()                   
     currState = fringe.pop()
     while not problem.isGoalState(currState):
         if currState not in visited:
@@ -123,31 +125,25 @@ def breadthFirstSearch(problem):
         path = pathToCurrent.pop()
         
     return path
-
 def uniformCostSearch(problem):
     """Search the node of least total cost first."""
-    "*** YOUR CODE HERE ***"
-    from util import Queue,PriorityQueue
-    fringe = PriorityQueue()                    # Fringe to manage which states to expand
-    fringe.push(problem.getStartState(),0)
-    visited = []                                # List to check whether state has already been visited
-    tempPath=[]                                 # Temp variable to get intermediate paths
-    path=[]                                     # List to store final sequence of directions 
-    pathToCurrent=PriorityQueue()               # Queue to store direction to children (currState and pathToCurrent go hand in hand)
-    currState = fringe.pop()
-    while not problem.isGoalState(currState):
-        if currState not in visited:
-            visited.append(currState)
-            successors = problem.getSuccessors(currState)
-            for child,direction,cost in successors:
-                tempPath = path + [direction]
-                costToGo = problem.getCostOfActions(tempPath)
-                if child not in visited:
-                    fringe.push(child,costToGo)
-                    pathToCurrent.push(tempPath,costToGo)
-        currState = fringe.pop()
-        path = pathToCurrent.pop()    
-    return path
+    fringe = util.PriorityQueue()
+    costs = util.Counter()
+    currentState = (problem.getStartState(), [])
+    fringe.push(currentState, 0)
+    visited = []
+
+    while not fringe.isEmpty():
+        node, path = fringe.pop()
+        if problem.isGoalState(node):
+            return path
+        if node not in visited:
+            visited.append(node)
+            for nextState, action, stateCost in problem.getSuccessors(node):
+                costs[nextState] = costs[node] + stateCost
+                fringe.push((nextState, path + [action]), costs[nextState])
+
+
 
 def nullHeuristic(state, problem=None):
     """
@@ -158,29 +154,29 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-    from util import Queue,PriorityQueue
-    fringe = PriorityQueue()                    # Fringe to manage which states to expand
-    fringe.push(problem.getStartState(),0)
-    currState = fringe.pop()
-    visited = []                                # List to check whether state has already been visited
-    tempPath=[]                                 # Temp variable to get intermediate paths
-    path=[]                                     # List to store final sequence of directions 
-    pathToCurrent=PriorityQueue()               # Queue to store direction to children (currState and pathToCurrent go hand in hand)
-    while not problem.isGoalState(currState):
-        if currState not in visited:
-            visited.append(currState)
-            successors = problem.getSuccessors(currState)
-            for child,direction,cost in successors:
-                tempPath = path + [direction]
-                costToGo = problem.getCostOfActions(tempPath) + heuristic(child,problem)
-                if child not in visited:
-                    fringe.push(child,costToGo)
-                    pathToCurrent.push(tempPath,costToGo)
-        currState = fringe.pop()
-        path = pathToCurrent.pop()    
-    return path
-    
-    #util.raiseNotDefined()
+
+    forAstar = util.PriorityQueue()
+
+    startLocation = problem.getStartState()
+
+    rootNode = (startLocation, [], 0)
+    forAstar.push(rootNode, 0)
+    visitedLocations = set()
+
+    while not forAstar.isEmpty():
+        node = forAstar.pop()
+
+        if problem.isGoalState(node[0]):
+            return node[1]
+        if node[0] not in visitedLocations:
+            visitedLocations.add(node[0])
+            for successor in problem.getSuccessors(node[0]):
+                if successor[0] not in visitedLocations:
+                    cost = node[2] + successor[2]
+                    totalCost = cost + heuristic(successor[0], problem)
+                    forAstar.push((successor[0], node[1] + [successor[1]], cost), totalCost)
+
+    return None
 
 
 # Abbreviations
