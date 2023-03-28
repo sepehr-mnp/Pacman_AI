@@ -106,16 +106,15 @@ def depthFirstSearch(problem):
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
-    fringe = Queue()                        
+    fringe = Queue()                
     fringe.push(problem.getStartState())
-    visited = []                            
-    tempPath=[]                             
-    path=[]                                  
-    pathToCurrent=Queue()                   
+    visited = []                    
+    path=[]                         
+    pathToCurrent=Queue()           
     currState = fringe.pop()
     while not problem.isGoalState(currState):
         if currState not in visited:
-            visited.append(currState)    
+            visited.append(currState)
             successors = problem.getSuccessors(currState)
             for child,direction,cost in successors:
                 fringe.push(child)
@@ -123,6 +122,7 @@ def breadthFirstSearch(problem):
                 pathToCurrent.push(tempPath)
         currState = fringe.pop()
         path = pathToCurrent.pop()
+
         
     return path
 def uniformCostSearch(problem):
@@ -154,29 +154,27 @@ def nullHeuristic(state, problem=None):
 
 def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
-
-    forAstar = util.PriorityQueue()
-
-    startLocation = problem.getStartState()
-
-    rootNode = (startLocation, [], 0)
-    forAstar.push(rootNode, 0)
-    visitedLocations = set()
-
-    while not forAstar.isEmpty():
-        node = forAstar.pop()
-
-        if problem.isGoalState(node[0]):
-            return node[1]
-        if node[0] not in visitedLocations:
-            visitedLocations.add(node[0])
-            for successor in problem.getSuccessors(node[0]):
-                if successor[0] not in visitedLocations:
-                    cost = node[2] + successor[2]
-                    totalCost = cost + heuristic(successor[0], problem)
-                    forAstar.push((successor[0], node[1] + [successor[1]], cost), totalCost)
-
-    return None
+    from util import Queue,PriorityQueue
+    fringe = PriorityQueue()                    # Fringe to manage which states to expand
+    fringe.push(problem.getStartState(),0)
+    currState = fringe.pop()
+    visited = []                               
+    tempPath=[]                                 # Temp variable to get intermediate paths
+    path=[]                                     # List to store final sequence of directions 
+    pathToCurrent=PriorityQueue()               # Queue to store direction to children (currState and pathToCurrent go hand in hand)
+    while not problem.isGoalState(currState):
+        if currState not in visited:
+            visited.append(currState)
+            successors = problem.getSuccessors(currState)
+            for child,direction,cost in successors:
+                tempPath = path + [direction]
+                costToGo = problem.getCostOfActions(tempPath) + heuristic(child,problem)
+                if child not in visited:
+                    fringe.push(child,costToGo)
+                    pathToCurrent.push(tempPath,costToGo)
+        currState = fringe.pop()
+        path = pathToCurrent.pop()    
+    return path
 
 
 # Abbreviations
